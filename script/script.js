@@ -1,5 +1,5 @@
 const LINKS = {
-  compra: "https://hotmart.com/pt-br/marketplace/produtos/palimed/S97455634U",
+  compra: "https://hotmart.com/pt-br/marketplace/produtos/cuidar-ate-o-fim/G101892157N",
   whatsapp: "https://wa.me/5516981902048",
   instagram: "https://instagram.com/rodolfomoraespali"
 };
@@ -43,12 +43,7 @@ function wireLinks(){
     el.setAttribute("target", "_blank");
     el.setAttribute("rel", "noopener");
 
-    el.addEventListener("click", (e) => {
-      if(!LINKS.compra){
-        e.preventDefault();
-        showToast("Configure o link de compra no script.js 🙂");
-      }
-    });
+   );
   });
 
   const wpp = $("#btnWhatsapp");
@@ -148,3 +143,4 @@ carousel.addEventListener("touchend", (e) => {
 });
 
 document.addEventListener("DOMContentLoaded", init);
+
