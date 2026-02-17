@@ -4,78 +4,47 @@ const LINKS = {
   instagram: "https://instagram.com/rodolfomoraespali"
 };
 
-const slides = document.querySelectorAll(".testimonial-slide");
-const indicators = document.querySelectorAll(".indicator");
-const nextBtn = document.querySelector(".carousel-btn.next");
-const prevBtn = document.querySelector(".carousel-btn.prev");
-
-let currentSlide = 0;
-let startX = 0;
-let endX = 0;
-
 function $(q){ return document.querySelector(q); }
-
-function init(){
-  const year = $("#year");
-  if(year) year.textContent = new Date().getFullYear();
-
-  wireLinks();
-  wireForm();
-}
 
 function showToast(msg){
   const toast = $("#toast");
   if(!toast) return;
   toast.textContent = msg;
   toast.classList.add("show");
-  clearTimeout(window.__toastTimer);
-  window.__toastTimer = setTimeout(() => toast.classList.remove("show"), 2600);
-}
-
-function scrollToTarget(selector){
-  const el = document.querySelector(selector);
-  if(!el) return;
-
-  const topbar = document.querySelector(".topbar");
-  const offset = (topbar?.offsetHeight || 0) + 10;
-  const y = el.getBoundingClientRect().top + window.scrollY - offset;
-
-  window.scrollTo({ top: y, behavior: "smooth" });
+  setTimeout(() => toast.classList.remove("show"), 2600);
 }
 
 function wireLinks(){
-  ["#btnComprarTop", "#btnComprarHero", "#btnComprarMid", "#btnComprarBottom"].forEach((id) => {
+  const idsCompra = ["#btnComprarTop", "#btnComprarHero", "#btnComprarMid", "#btnComprarBottom"];
+  
+  idsCompra.forEach((id) => {
     const el = $(id);
-    if(!el) return;
-
-    el.setAttribute("href", LINKS.compra);
-    el.setAttribute("target", "_blank");
-    el.setAttribute("rel", "noopener");
-
-    el.addEventListener("click", (e) => {
-      if(!LINKS.compra || LINKS.compra === "#"){
-        e.preventDefault();
-        showToast("Configure o link de compra no script.js 🙂");
-      }
-    });
+    if(el) {
+      el.href = LINKS.compra;
+      el.target = "_blank";
+      el.rel = "noopener";
+    }
   });
 
   const wpp = $("#btnWhatsapp");
-  const ig = $("#btnInstagram");
+  if(wpp) wpp.href = LINKS.whatsapp;
 
-  if(wpp){
-    wpp.setAttribute("href", LINKS.whatsapp);
-    wpp.setAttribute("target", "_blank");
-    wpp.setAttribute("rel", "noopener");
-  }
-  if(ig){
-    ig.setAttribute("href", LINKS.instagram);
-    ig.setAttribute("target", "_blank");
-    ig.setAttribute("rel", "noopener");
-  }
+  const ig = $("#btnInstagram");
+  if(ig) ig.href = LINKS.instagram;
 
   document.querySelectorAll("[data-scroll]").forEach(btn => {
-    btn.addEventListener("click", () => scrollToTarget(btn.getAttribute("data-scroll")));
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      const target = btn.getAttribute("data-scroll");
+      const el = $(target);
+      if(el) {
+        const offset = ($(".topbar")?.offsetHeight || 0) + 10;
+        window.scrollTo({
+          top: el.offsetTop - offset,
+          behavior: "smooth"
+        });
+      }
+    });
   });
 }
 
@@ -85,68 +54,47 @@ function wireForm(){
 
   form.addEventListener("submit", (e) => {
     e.preventDefault();
-
     const nome = form.nome.value.trim();
     const contato = form.contato.value.trim();
     const mensagem = form.mensagem.value.trim();
 
-    if(!nome || !contato || !mensagem){
-      showToast("Preencha todos os campos 🙂");
-      return;
-    }
+    if(!nome || !contato || !mensagem) return;
 
-    const txt =
-      `Olá! Me chamo ${nome}.%0A` +
-      `Meu contato: ${contato}%0A%0A` +
-      `Mensagem:%0A${encodeURIComponent(mensagem)}`;
-
-    const url = `${LINKS.whatsapp}?text=${txt}`;
-
-    window.open(url, "_blank", "noopener");
+    const txt = `Olá! Me chamo ${nome}.%0AContatos: ${contato}%0A%0A${encodeURIComponent(mensagem)}`;
+    window.open(`${LINKS.whatsapp}?text=${txt}`, "_blank");
     showToast("Abrindo WhatsApp...");
     form.reset();
   });
 }
 
-function showSlide(index){
+function initCarousel() {
+  const slides = document.querySelectorAll(".testimonial-slide");
+  const indicators = document.querySelectorAll(".indicator");
+  const nextBtn = $(".carousel-btn.next");
+  const prevBtn = $(".carousel-btn.prev");
+  let current = 0;
+
   if(!slides.length) return;
-  slides.forEach(slide => slide.classList.remove("active"));
-  indicators.forEach(dot => dot.classList.remove("active"));
 
-  slides[index].classList.add("active");
-  indicators[index].classList.add("active");
-}
+  function show(index) {
+    slides.forEach(s => s.classList.remove("active"));
+    indicators.forEach(i => i.classList.remove("active"));
+    slides[index].classList.add("active");
+    indicators[index].classList.add("active");
+  }
 
-function nextSlide(){
-  currentSlide = (currentSlide + 1) % slides.length;
-  showSlide(currentSlide);
-}
-
-function prevSlide(){
-  currentSlide = (currentSlide - 1 + slides.length) % slides.length;
-  showSlide(currentSlide);
-}
-
-if(nextBtn) nextBtn.addEventListener("click", nextSlide);
-if(prevBtn) prevBtn.addEventListener("click", prevSlide);
-
-indicators.forEach(indicator => {
-  indicator.addEventListener("click", (e) => {
-    currentSlide = parseInt(e.target.dataset.slide);
-    showSlide(currentSlide);
+  if(nextBtn) nextBtn.onclick = () => { current = (current + 1) % slides.length; show(current); };
+  if(prevBtn) prevBtn.onclick = () => { current = (current - 1 + slides.length) % slides.length; show(current); };
+  
+  indicators.forEach((ind, i) => {
+    ind.onclick = () => { current = i; show(current); };
   });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  if($("#year")) $("#year").textContent = new Date().getFullYear();
+  
+  wireLinks();
+  wireForm();
+  initCarousel();
 });
-
-const carousel = document.querySelector(".carousel-track");
-if(carousel){
-  carousel.addEventListener("touchstart", (e) => {
-    startX = e.touches[0].clientX;
-  });
-  carousel.addEventListener("touchend", (e) => {
-    endX = e.changedTouches[0].clientX;
-    if(startX - endX > 50) nextSlide();
-    if(endX - startX > 50) prevSlide();
-  });
-}
-
-document.addEventListener("DOMContentLoaded", init);
